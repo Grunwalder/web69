@@ -1,9 +1,11 @@
 import { todoList } from "../index.js"
 import cryto from "crypto"
+import mapApi from "../global/index.js"
+
 const todoListController = {
     getALL: async (req, res) => {
 
-        const data = await (await fetch('http://localhost:3000/todoList')).json();
+        const data = await (await fetch(`${mapApi}/TodoList`)).json();
 
         console.log('line 8', data)
         res.send({
@@ -34,28 +36,60 @@ const todoListController = {
                 todoName: todoName,
                 date: (new Date).getTime()
             };
-            await fetch('http://localhost:3000/todoList', {
-                method :'post',
+            const insert = await (await fetch('${mapApi}/todoList', {
+                method: 'post',
                 body: JSON.stringify(newTodo),
                 headers: {
-                    "Content-Type": 'application/json; charset=UTF-8'
+                    "Content-type": "application/json; charset=UTF-8"
                 }
-            }).then((rs) => {
-                return rs.json();
-            }); 
-            res.send({
-                message: 'success',
-                data: todoList,
-                inserted: newTodo,
-                status: true
-            })
+            })).json();
+            if (!insert) throw new Error('Không thành công');
+            res.status(201).send({
+                message: "Thành công!",
+                data: insert,
+                success: false
+            });
         } catch (error) {
             res.status(403).send({
+                message: error.message,
+                data: null,
+                success: false
+            });
+        }
+    },
+    update: async (req, res) => {
+        try {
+            const { id } = req.params
+            const { todoName, date } = req.body;
+            const updateTodo = await (await fetch(`${mapApi}/todoList/${id}`), {
+                method: 'PUT',
+                body: JSON.stringify({
+                    todoName,
+                    date
+                }),
+                headers: {
+                    "content-type": "application/json; charset=utf-8",
+                }
+            }.JSON());
+            res.status(201).send({
+                data: updateTodo,
+                message: successful,
+                status: true
+            })
+
+
+        } catch (error) {
+            console.log(error.message);
+            res.status(500).send({
                 message: error.message,
                 data: null,
                 status: false
             })
         }
     }
+
 }
+
+
+
 export default todoListController;
